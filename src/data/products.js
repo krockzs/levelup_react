@@ -8,7 +8,7 @@ export const PRODUCTS = [
     price: 29990,
     year: 1995,
     images: [
-      "/imagenes/JuegosDeMesa/catan1.avif",
+      "/imagenes/JuegosDeMesa/catan_1.jpg",
       "/imagenes/JuegosDeMesa/catan2.avif",
       "/imagenes/JuegosDeMesa/catan3.avif",
       "/imagenes/JuegosDeMesa/catan4.avif",
