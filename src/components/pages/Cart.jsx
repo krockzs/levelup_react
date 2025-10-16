@@ -1,5 +1,5 @@
 import Button from '../atoms/Button';
-import Price from '../atoms/price';
+import Price from '../atoms/Price';
 import { cartTotal } from '../../utils/cart';
 
 export default function Cart({ cart, onRemove, onSetQty, onClear }) {

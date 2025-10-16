@@ -1,4 +1,4 @@
-import Price from "../atoms/price";
+import Price from "../atoms/Price";
 import Button from "../atoms/Button";
 
 export default function ProductCard({ p, onAdd }) {
