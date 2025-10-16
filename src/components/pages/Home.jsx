@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import productsData from '../../data/products';
 import ProductGrid from '../organisms/ProductGrid';
+import Community from '../organisms/Community';
+import Eventos from '../organisms/Eventos';
+import Contacto from '../organisms/Contacto';
+import Footer from '../molecules/Footer';
+
 
 export default function Home({ onAdd }) {
   const [query, setQuery] = useState('');
@@ -55,6 +60,10 @@ export default function Home({ onAdd }) {
         <p>Encuentra tu próximo setup.</p>
         <ProductGrid products={filtered} onAdd={onAdd} />
       </section>
+      <Community />
+      <Eventos />
+      <Contacto />
+      <Footer />
     </>
   );
 }

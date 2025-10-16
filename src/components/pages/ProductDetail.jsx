@@ -1,73 +1,156 @@
+// src/components/pages/Product.jsx
+import { useParams, Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import Footer from '../molecules/Footer';
 import PRODUCTS from '../../data/products';
+import Price from '../atoms/Price'
 import Button from '../atoms/Button';
-import Price from '../atoms/price';
 
-export default function ProductDetail({ onAdd }) {
-  const { code = '' } = useParams();
+export default function Product({ onAdd }) {
+  const { code } = useParams();
+
+  // Buscar producto por código si hay parámetro
   const product = useMemo(
-    () => PRODUCTS.find(x => String(x.code).toUpperCase() === String(code).toUpperCase()),
+    () =>
+      code
+        ? PRODUCTS.find(
+            (x) => String(x.code).toUpperCase() === String(code).toUpperCase()
+          )
+        : null,
     [code]
   );
 
-  const [mainSrc, setMainSrc] = useState(() => (product?.images?.[0] || product?.image));
+  const [mainSrc, setMainSrc] = useState(
+    () => product?.images?.[0] || product?.image
+  );
 
-  if (!product) {
-    return (
-      <section className="section container">
-        <h2>Producto no encontrado</h2>
-        <a className="btn" href="/">Volver</a>
-      </section>
-    );
-  }
-
-  const imgs = product.images?.length ? product.images : [product.image];
+  // Productos recomendados
+  const recos = product
+    ? PRODUCTS.filter(
+        (p) => p.category === product.category && p.code !== product.code
+      ).slice(0, 6)
+    : [];
 
   return (
-    <section className="section container">
-      <h2>{product.name}</h2>
-      <div className="detail-grid">
-        {/* Galería */}
-        <div className="gallery">
-          <div className="gallery-main">
-            <img src={mainSrc} alt={product.name} />
-          </div>
-          <div className="thumbs">
-            {imgs.map((src) => (
-              <img
-                key={src}
-                src={src}
-                alt={product.name}
-                className={src === mainSrc ? 'active' : ''}
-                onClick={() => setMainSrc(src)}
-              />
+    <>
+      {product ? (
+        <>
+          <section className="section container">
+            <h2>{product.name}</h2>
+            <div className="detail-grid">
+              {/* Galería */}
+              <div className="gallery">
+                <div className="gallery-main">
+                  <img src={mainSrc} alt={product.name} />
+                </div>
+                <div className="thumbs">
+                  {(product.images?.length ? product.images : [product.image]).map(
+                    (src) => (
+                      <img
+                        key={src}
+                        src={src}
+                        alt={product.name}
+                        className={src === mainSrc ? 'active' : ''}
+                        onClick={() => setMainSrc(src)}
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Información del producto */}
+              <div>
+                <p className="chip">{product.category}</p>
+                <p className="meta">
+                  Código: {product.code} • Año: {product.year}
+                </p>
+                <p>{product.description}</p>
+                {product.origin && (
+                  <p className="meta">
+                    Fabricante: {product.origin.manufacturer} — Distribuidor:{' '}
+                    {product.origin.distributor}
+                  </p>
+                )}
+
+                <h3 style={{ marginTop: 12 }}>
+                  <Price value={product.price} />
+                </h3>
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <Button kind="primary" onClick={() => onAdd(product)}>
+                    Añadir al carrito
+                  </Button>
+                </div>
+
+                <div style={{ marginTop: 18 }}>
+                  <Link className="btn" to="/">
+                    ← Volver
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Sección de recomendaciones */}
+          <section className="section container">
+            <h2 className="section-title">Te puede interesar</h2>
+            <p className="section-subtitle">
+              Productos de la misma categoría.
+            </p>
+
+            <div className="grid">
+              {recos.map((p) => (
+                <article key={p.code} className="card">
+                  <div className="media">
+                    <img src={p.images?.[0] || p.image} alt={p.name} />
+                  </div>
+                  <div className="body">
+                    <span className="badge">{p.category}</span>
+                    <h3>
+                      <Link to={`/product/${p.code}`}>{p.name}</Link>
+                    </h3>
+                    <div className="price">
+                      <Price value={p.price} />
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : (
+        /* === Si no hay código, mostrar catálogo general === */
+        <section id="productos" className="section container">
+          <h2 className="section-title">Catálogo de Productos</h2>
+          <p className="section-subtitle">
+            Explora artículos gamer seleccionados por nuestra comunidad.
+          </p>
+
+          <div className="grid">
+            {PRODUCTS.map((p) => (
+              <article key={p.code} className="card">
+                <div className="media">
+                  <Link to={`/product/${p.code}`}>
+                    <img src={p.image} alt={p.name} />
+                  </Link>
+                </div>
+                <div className="body">
+                  <span className="badge">{p.category}</span>
+                  <h3>{p.name}</h3>
+                  <div className="price">
+                    <Price value={p.price} />
+                  </div>
+                  <Link to={`/product/${p.code}`} className="btn-accent">
+                    Ver detalle
+                  </Link>
+                </div>
+              </article>
             ))}
           </div>
-        </div>
+        </section>
+      )}
 
-        {/* Detalle */}
-        <div>
-          <p className="chip">{product.category}</p>
-          <p className="meta">Código: {product.code} • Año: {product.year}</p>
-          <p>{product.description}</p>
-          {product.origin && (
-            <p className="meta">
-              Fabricante: {product.origin.manufacturer} — Distribuidor: {product.origin.distributor}
-            </p>
-          )}
-
-          <h3 style={{ marginTop: 12 }}><Price value={product.price} /></h3>
-
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <Button kind="primary" onClick={() => onAdd(product)}>Añadir al carrito</Button>
-          </div>
-
-          <div style={{ marginTop: 18 }}>
-            <a className="btn" href="/">← Volver</a>
-          </div>
-        </div>
-      </div>
-    </section>
+      <Footer />
+    </>
   );
 }

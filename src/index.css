@@ -28,7 +28,7 @@ body {
 /* === LAYOUT UTILITIES === */
 .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
 .section { max-width: 1200px; margin: auto; padding: 28px 16px 24px; display: flex; flex-direction: column; }
-.section-alt { background: radial-gradient(1000px 520px at 50% -10%, rgba(57, 255, 20, .07), transparent 60%); }
+.section-alt { background: black; }
 .section h2 { font-family: Orbitron, sans-serif; font-size: clamp(20px, 3vw, 32px); margin: 0 0 8px; }
 .section p { color: var(--text-2); margin: 0 0 16px; }
 
@@ -222,3 +222,83 @@ body {
 @media (max-width: 960px) {
   .nav-links { display: none; }
 }
+/* === ICON LINKS (MI CUENTA / CARRITO / CONTACTO) === */
+.icon-links {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+}
+
+.icon-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
+.icon-link svg {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+  color: var(--blue); /* Azul gamer principal */
+  transition: color 0.3s, transform 0.3s;
+}
+
+.icon-link:hover {
+  color: var(--green); /* Verde neón al hover */
+  background: rgba(30, 144, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.icon-link:hover svg {
+  color: var(--green);
+  transform: scale(1.15);
+}
+
+.grid-3 {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+}
+
+.card-post {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.card-post h3 {
+  margin: 0 0 8px;
+  font-family: Orbitron, sans-serif;
+  color: var(--blue);
+}
+
+.card-post .post-date {
+  color: var(--text-2);
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.card-post p { margin: 0 0 10px; }
+
+.card-post .link {
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.card-post .link:hover {
+  color: var(--blue);
+}
+
+
