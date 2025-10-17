@@ -3,13 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import Footer from '../molecules/Footer';
 import PRODUCTS from '../../data/products';
-import Price from '../atoms/Price'
+import Price from '../atoms/Price';
 import Button from '../atoms/Button';
 
 export default function Product({ onAdd }) {
   const { code } = useParams();
 
-  // Buscar producto por código si hay parámetro
   const product = useMemo(
     () =>
       code
@@ -24,7 +23,6 @@ export default function Product({ onAdd }) {
     () => product?.images?.[0] || product?.image
   );
 
-  // Productos recomendados
   const recos = product
     ? PRODUCTS.filter(
         (p) => p.category === product.category && p.code !== product.code
@@ -38,7 +36,6 @@ export default function Product({ onAdd }) {
           <section className="section container">
             <h2>{product.name}</h2>
             <div className="detail-grid">
-              {/* Galería */}
               <div className="gallery">
                 <div className="gallery-main">
                   <img src={mainSrc} alt={product.name} />
@@ -58,7 +55,6 @@ export default function Product({ onAdd }) {
                 </div>
               </div>
 
-              {/* Información del producto */}
               <div>
                 <p className="chip">{product.category}</p>
                 <p className="meta">
@@ -91,7 +87,6 @@ export default function Product({ onAdd }) {
             </div>
           </section>
 
-          {/* Sección de recomendaciones */}
           <section className="section container">
             <h2 className="section-title">Te puede interesar</h2>
             <p className="section-subtitle">
@@ -99,27 +94,29 @@ export default function Product({ onAdd }) {
             </p>
 
             <div className="grid">
-              {recos.map((p) => (
-                <article key={p.code} className="card">
-                  <div className="media">
-                    <img src={p.images?.[0] || p.image} alt={p.name} />
-                  </div>
-                  <div className="body">
-                    <span className="badge">{p.category}</span>
-                    <h3>
-                      <Link to={`/product/${p.code}`}>{p.name}</Link>
-                    </h3>
-                    <div className="price">
-                      <Price value={p.price} />
+              {recos.map((p) => {
+                if (p.code === product.code) return null;
+                return (
+                  <article key={p.code} className="card">
+                    <div className="media">
+                      <img src={p.images?.[0] || p.image} alt={p.name} />
                     </div>
-                  </div>
-                </article>
-              ))}
+                    <div className="body">
+                      <span className="badge">{p.category}</span>
+                      <h3>
+                        <Link to={`/product/${p.code}`}>{p.name}</Link>
+                      </h3>
+                      <div className="price">
+                        <Price value={p.price} />
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </section>
         </>
       ) : (
-        /* === Si no hay código, mostrar catálogo general === */
         <section id="productos" className="section container">
           <h2 className="section-title">Catálogo de Productos</h2>
           <p className="section-subtitle">
