@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { cartCount } from '../../utils/cart';
 import { FaUser, FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 
-export default function Navbar({ cart }) {
+export default function Navbar({ cart, session }) {
   const count = cartCount(cart);
 
   return (
@@ -25,12 +25,21 @@ export default function Navbar({ cart }) {
 
         {/* Enlaces de acción tipo icono */}
         <div className="icon-links">
-          <a href="/perfil.html" className="icon-link">
+          <Link to="/perfil" className="icon-link" aria-label="Mi cuenta">
             <FaUser />
-            <span>Mi cuenta</span>
-          </a>
+            {session ? (
+              <span style={{ lineHeight: 1, textAlign: 'center' }}>
+                <strong style={{ display: 'block' }}>
+                  {session.name}
+                </strong>
+                <small style={{ opacity: .85 }}>Mi cuenta</small>
+              </span>
+            ) : (
+              <span>Mi cuenta</span>
+            )}
+          </Link>
 
-          <Link to="/cart" className="icon-link">
+          <Link to="/cart" className="icon-link" aria-label="Carrito">
             <FaShoppingCart />
             <span>Carrito ({count})</span>
           </Link>
@@ -40,6 +49,7 @@ export default function Navbar({ cart }) {
             className="icon-link"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Contacto por WhatsApp"
           >
             <FaWhatsapp />
             <span>Contacto</span>

@@ -1,15 +1,19 @@
+// src/components/pages/Home.jsx
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import productsData from '../../data/products';
 import ProductGrid from '../organisms/ProductGrid';
 import Community from '../organisms/Community';
 import Eventos from '../organisms/Eventos';
 import Contacto from '../organisms/Contacto';
 import Footer from '../molecules/Footer';
-
+import { getCurrentUser } from '../../utils/users';
 
 export default function Home({ onAdd }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  const [addedPopup, setAddedPopup] = useState(null);
+  const navigate = useNavigate();
 
   // Filtrado dinámico
   const filtered = productsData.filter((p) => {
@@ -17,6 +21,14 @@ export default function Home({ onAdd }) {
     const matchesCategory = category === 'all' || p.category === category;
     return matchesQuery && matchesCategory;
   });
+
+  // Envolver onAdd para disparar el popup (si hay sesión)
+  const onAddWithPopup = (product) => {
+    onAdd(product); // App maneja auth/redirect
+    if (getCurrentUser()) {
+      setAddedPopup(`Producto “${product.name}” añadido`);
+    }
+  };
 
   return (
     <>
@@ -58,12 +70,41 @@ export default function Home({ onAdd }) {
       <section className="section container" id="productos">
         <h2>Productos</h2>
         <p>Encuentra tu próximo setup.</p>
-        <ProductGrid products={filtered} onAdd={onAdd} />
+        <ProductGrid products={filtered} onAdd={onAddWithPopup} />
       </section>
+
       <Community />
       <Eventos />
       <Contacto />
       <Footer />
+
+      {/* Popup añadido */}
+      {addedPopup && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setAddedPopup(null)}
+          style={{
+            position:'fixed', inset:0, background:'rgba(0,0,0,.6)',
+            display:'grid', placeItems:'center', zIndex:60
+          }}
+        >
+          <div
+            onClick={(e)=>e.stopPropagation()}
+            style={{
+              width:'min(520px,92vw)', background:'rgba(17,24,39,.95)',
+              border:'1px solid rgba(255,255,255,.12)', borderRadius:14, padding:18
+            }}
+          >
+            <h3 style={{margin:0, marginBottom:8}}>Producto añadido</h3>
+            <p className="meta" style={{margin:0}}>{addedPopup}</p>
+            <div style={{display:'flex', justifyContent:'flex-end', gap:8, marginTop:12}}>
+              <button className="btn" onClick={() => setAddedPopup(null)}>Cerrar</button>
+              <button className="btn-accent" onClick={() => navigate('/cart')}>Ir a Carrito</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
