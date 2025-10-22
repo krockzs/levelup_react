@@ -1,4 +1,6 @@
 // src/components/pages/Perfil.jsx
+
+import React from 'react'; 
 import { useMemo, useState, useEffect } from 'react';
 import {
   getCurrentUser,

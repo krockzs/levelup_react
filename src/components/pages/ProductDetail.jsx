@@ -1,4 +1,5 @@
 // src/components/pages/ProductDetail.jsx
+import React from 'react'; 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 import { FaStar } from 'react-icons/fa';

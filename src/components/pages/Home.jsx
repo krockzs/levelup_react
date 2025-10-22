@@ -1,4 +1,6 @@
 // src/components/pages/Home.jsx
+
+import React from 'react'; 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import productsData from '../../data/products';

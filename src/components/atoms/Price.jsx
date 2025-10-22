@@ -1,3 +1,4 @@
+import React from 'react'; 
 
 export default function Price({ value }) {
   const clp = new Intl.NumberFormat('es-CL', {

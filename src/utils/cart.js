@@ -1,4 +1,5 @@
 const KEY = 'lu_cart';
+import React from 'react'; 
 
 export function getCart() {
   try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }

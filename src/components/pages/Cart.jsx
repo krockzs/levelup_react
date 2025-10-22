@@ -1,4 +1,6 @@
 // src/components/pages/Cart.jsx
+
+import React from 'react'; 
 import { useMemo, useState } from 'react';
 import Button from '../atoms/Button';
 import Price from '../atoms/Price';
