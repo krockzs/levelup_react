@@ -243,7 +243,7 @@ body {
   border-radius: 20px;
 
   /* 🖼 Imagen de fondo */
-  background-image: url('/public/imagenes/Fondos/fondo_1.jpg');
+  background-image: url('/imagenes/Fondos/fondo_1.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -312,7 +312,11 @@ body {
   display: flex; flex-direction: column; justify-content: space-between;
 }
 .card .media {
-  aspect-ratio: 4/3; background: #0a0c10;
+  aspect-ratio: 4/3; 
+  background: #0a0c10;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
 .card .media img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -455,5 +459,4 @@ body {
 .card-post .link:hover {
   color: var(--blue);
 }
-
 
