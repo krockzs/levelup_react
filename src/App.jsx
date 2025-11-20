@@ -5,6 +5,7 @@ import Cart from './components/pages/Cart';
 import ProductDetail from './components/pages/ProductDetail';
 import Perfil from './components/pages/Perfil';
 import Navbar from './components/organisms/Navbar';
+import ProductList from './components/organisms/ProductList';
 
 import {
   loadCart, persistCart, addToCart,

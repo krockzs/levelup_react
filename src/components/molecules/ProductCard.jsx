@@ -10,7 +10,7 @@ export default function ProductCard({ p, onAdd }) {
         <img src={firstImg} alt={p.name} />
       </a>
       <div className="body">
-        <span className="badge">{p.category}</span>
+        <span className="badge">{p.categoria}</span>
         <h3 style={{ margin: 0 }}>
           <a href={`/product/${p.code}`} style={{ color: "inherit", textDecoration: "none" }}>
             {p.name}

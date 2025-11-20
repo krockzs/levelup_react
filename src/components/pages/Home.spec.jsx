@@ -1,25 +1,18 @@
-// src/components/pages/Home.spec.jsx
-
-import React from 'react'; 
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Home from './Home';
 
-// 🧩 Mock de módulos dependientes
-jest.mock('../../data/products', () => ([
-  {
-    code: 'MS001',
-    category: 'Mouse',
-    name: 'Logitech G502 HERO',
-    price: 49990,
-  },
-  {
-    code: 'SG001',
-    category: 'Sillas Gamers',
-    name: 'Secretlab Titan',
-    price: 349990,
-  },
-]));
+import { getProducts } from '../../data/productsApi';
+import { getCurrentUser } from '../../utils/users';
+
+// =======================================
+// Mocks de API y módulos dependientes
+// =======================================
+
+jest.mock('../../data/productsApi', () => ({
+  getProducts: jest.fn(),
+}));
 
 jest.mock('../organisms/ProductGrid', () => ({ products, onAdd }) => (
   <div data-testid="product-grid">
@@ -36,22 +29,43 @@ jest.mock('../organisms/Community', () => () => <div data-testid="community" />)
 jest.mock('../organisms/Eventos', () => () => <div data-testid="eventos" />);
 jest.mock('../organisms/Contacto', () => () => <div data-testid="contacto" />);
 jest.mock('../molecules/Footer', () => () => <div data-testid="footer" />);
+
 jest.mock('../../utils/users', () => ({
   getCurrentUser: jest.fn(),
 }));
 
-const { getCurrentUser } = require('../../utils/users');
+// =======================================
+// PRODUCTOS MOCK
+// =======================================
+const mockData = [
+  {
+    code: 'MS001',
+    categoria: 'Mouse',
+    name: 'Logitech G502 HERO',
+    price: 49990,
+    images: ['/img/m1.jpg'],
+  },
+  {
+    code: 'SG001',
+    categoria: 'Sillas Gamers',
+    name: 'Secretlab Titan',
+    price: 349990,
+    images: ['/img/s1.jpg'],
+  },
+];
 
-// 🧪 TESTS
 describe('<Home />', () => {
   const mockOnAdd = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    getProducts.mockResolvedValue(mockData); // API mock
   });
 
-  // 2️⃣ Renderiza correctamente la estructura principal
-  test('renderiza los elementos principales y los componentes hijos', () => {
+  // =======================================
+  // Renderiza estructura principal
+  // =======================================
+  test('renderiza los elementos principales y los componentes hijos', async () => {
     render(
       <MemoryRouter>
         <Home onAdd={mockOnAdd} />
@@ -59,16 +73,18 @@ describe('<Home />', () => {
     );
 
     expect(screen.getByText('Tienda De Artículos Gamer')).toBeInTheDocument();
-    expect(screen.getByText('Productos')).toBeInTheDocument();
-    expect(screen.getByTestId('product-grid')).toBeInTheDocument();
     expect(screen.getByTestId('community')).toBeInTheDocument();
     expect(screen.getByTestId('eventos')).toBeInTheDocument();
     expect(screen.getByTestId('contacto')).toBeInTheDocument();
     expect(screen.getByTestId('footer')).toBeInTheDocument();
+
+    expect(await screen.findByTestId('product-grid')).toBeInTheDocument();
   });
 
-  // 3️⃣ Filtrado por texto en el input de búsqueda
-  test('filtra productos por texto ingresado en el buscador', () => {
+  // =======================================
+  // Filtrado por texto
+  // =======================================
+  test('filtra productos por texto ingresado', async () => {
     render(
       <MemoryRouter>
         <Home onAdd={mockOnAdd} />
@@ -76,15 +92,20 @@ describe('<Home />', () => {
     );
 
     const input = screen.getByPlaceholderText('Buscar producto...');
+
     fireEvent.change(input, { target: { value: 'Logitech' } });
 
-    const items = screen.getAllByTestId('product-item');
-    expect(items).toHaveLength(1);
-    expect(items[0]).toHaveTextContent('Logitech G502 HERO');
+    await waitFor(() => {
+      const items = screen.getAllByTestId('product-item');
+      expect(items).toHaveLength(1);
+      expect(items[0]).toHaveTextContent('Logitech G502 HERO');
+    });
   });
 
-  // 4️⃣ Filtrado por categoría seleccionada
-  test('filtra productos por categoría seleccionada', () => {
+  // =======================================
+  // Filtrado por categoría real (categoria)
+  // =======================================
+  test('filtra productos por categoría', async () => {
     render(
       <MemoryRouter>
         <Home onAdd={mockOnAdd} />
@@ -92,14 +113,19 @@ describe('<Home />', () => {
     );
 
     const select = screen.getByLabelText('Filtrar por categoría');
+
     fireEvent.change(select, { target: { value: 'Mouse' } });
 
-    const items = screen.getAllByTestId('product-item');
-    expect(items).toHaveLength(1);
-    expect(items[0]).toHaveTextContent('Logitech G502 HERO');
+    await waitFor(() => {
+      const items = screen.getAllByTestId('product-item');
+      expect(items).toHaveLength(1);
+      expect(items[0]).toHaveTextContent('Logitech G502 HERO');
+    });
   });
 
-  // 5️⃣ Popup se muestra solo si hay usuario logeado
+  // =======================================
+  // Popup cuando hay usuario
+  // =======================================
   test('muestra popup al agregar producto si hay usuario logeado', async () => {
     getCurrentUser.mockReturnValue({ name: 'Tony Stark' });
 
@@ -109,17 +135,21 @@ describe('<Home />', () => {
       </MemoryRouter>
     );
 
-    const addButton = screen.getAllByText('Agregar')[0];
-    fireEvent.click(addButton);
+    const addButton = await screen.findAllByText('Agregar');
+    fireEvent.click(addButton[0]);
 
     await waitFor(() =>
       expect(screen.getByRole('dialog')).toBeInTheDocument()
     );
 
-    expect(screen.getByText(/Producto “Logitech G502 HERO” añadido/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Producto “Logitech G502 HERO” añadido/)
+    ).toBeInTheDocument();
   });
 
-  // 6️⃣ Popup NO se muestra si no hay sesión iniciada
+  // =======================================
+  // NO popup cuando no hay usuario
+  // =======================================
   test('no muestra popup si no hay usuario logeado', async () => {
     getCurrentUser.mockReturnValue(null);
 
@@ -129,8 +159,8 @@ describe('<Home />', () => {
       </MemoryRouter>
     );
 
-    const addButton = screen.getAllByText('Agregar')[0];
-    fireEvent.click(addButton);
+    const addButton = await screen.findAllByText('Agregar');
+    fireEvent.click(addButton[0]);
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();

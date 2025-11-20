@@ -1,9 +1,8 @@
-// src/components/pages/Home.jsx
-
-import React from 'react'; 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import productsData from '../../data/products';
+
+import { getProducts } from '../../data/productsApi'; 
+
 import ProductGrid from '../organisms/ProductGrid';
 import Community from '../organisms/Community';
 import Eventos from '../organisms/Eventos';
@@ -12,19 +11,35 @@ import Footer from '../molecules/Footer';
 import { getCurrentUser } from '../../utils/users';
 
 export default function Home({ onAdd }) {
+  const [products, setProducts] = useState([]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [addedPopup, setAddedPopup] = useState(null);
   const navigate = useNavigate();
 
-  // Filtrado dinámico
-  const filtered = productsData.filter((p) => {
+  // ====================== CARGAR PRODUCTOS DESDE API ======================
+  useEffect(() => {
+    getProducts()
+      .then((data) => {
+        setProducts(data);
+      })
+      .catch((err) => {
+        console.error("Error cargando productos:", err);
+        setProducts([]);
+      });
+  }, []);
+
+  // ====================== FILTROS ======================
+  const filtered = products.filter((p) => {
     const matchesQuery = p.name.toLowerCase().includes(query.toLowerCase());
-    const matchesCategory = category === 'all' || p.category === category;
+
+    // backend usa "categoria"
+    const matchesCategory = category === 'all' || p.categoria === category;
+
     return matchesQuery && matchesCategory;
   });
 
-  // Envolver onAdd para disparar el popup (si hay sesión)
+  // ======================= AÑADIR PRODUCTO =======================
   const onAddWithPopup = (product) => {
     onAdd(product); // App maneja auth/redirect
     if (getCurrentUser()) {
@@ -34,7 +49,7 @@ export default function Home({ onAdd }) {
 
   return (
     <>
-      {/* 🟩 Filtro superior (segundo) */}
+      {/* 🟩 Filtro superior */}
       <section className="segundo">
         <h1>Tienda De Artículos Gamer</h1>
         <p>Ofertas, noticias gamer, guías y eventos para ganar puntos LevelUp.</p>
@@ -48,6 +63,7 @@ export default function Home({ onAdd }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+
           <select
             id="category"
             aria-label="Filtrar por categoría"
@@ -72,6 +88,7 @@ export default function Home({ onAdd }) {
       <section className="section container" id="productos">
         <h2>Productos</h2>
         <p>Encuentra tu próximo setup.</p>
+
         <ProductGrid products={filtered} onAdd={onAddWithPopup} />
       </section>
 
