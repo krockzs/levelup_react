@@ -1,20 +1,38 @@
-// src/components/pages/Perfil.jsx
-
-import React from 'react'; 
-import { useMemo, useState, useEffect } from 'react';
-import {
-  getCurrentUser,
-  registerUser,
-  loginUser,
-  logout,
-} from '../../utils/users';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { getCurrentUser, registerUser, loginUser, logout } from '../../utils/users';
 
 export default function Perfil() {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [status, setStatus] = useState({ type: null, msg: '' });
   const location = useLocation();
+  const [misDatos, setMisDatos] = useState(null);
 
+  async function fetchMisDatos() {
+    try {
+      const session = getCurrentUser();
+      const token = session?.token;
+      if (!token) return null;
+      
+      const res = await fetch("https://api.sebaorekind.site/auth/midatos", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) return null;
+
+      return await res.json();
+    } catch (err) {
+      console.error("Error cargando datos del usuario:", err);
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    fetchMisDatos().then(data => {
+      if (data) setMisDatos(data);
+    });
+  }, []);
+  
   // Sesión (solo lectura directa del storage)
   const user = getCurrentUser();
 
@@ -34,49 +52,66 @@ export default function Perfil() {
   }, []);
 
   // ===== Formularios =====
-  const [loginVals, setLoginVals] = useState({ email: '', password: '' });
-  const [regVals, setRegVals] = useState({ name: '', email: '', password: '', password2: '' });
+  const [loginVals, setLoginVals] = useState({ correo: '', password: '' });
+  const [regVals, setRegVals] = useState({ name: '', correo: '', password: '', password2: '', address: '' });
   const [touched, setTouched] = useState({});
 
-  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-  const loginErrors = useMemo(() => {
-    const e = {};
-    if (!EMAIL_RE.test(String(loginVals.email || '').trim())) e.email = 'Email no válido.';
-    if (String(loginVals.password || '').length < 6) e.password = 'Mínimo 6 caracteres.';
-    return e;
+const loginErrors = useMemo(() => {
+  const e = {};
+  const emailTrimmed = String(loginVals.correo || '').trim();
+
+  if (!EMAIL_RE.test(emailTrimmed)) e.correo = 'Email no válido.';
+  if (String(loginVals.password || '').length < 6) e.password = 'Mínimo 6 caracteres.';
+
+  return e;
   }, [loginVals]);
 
-  const regErrors = useMemo(() => {
-    const e = {};
-    const n = String(regVals.name || '').trim();
-    if (n.length < 3 || n.length > 60) e.name = 'Nombre: 3–60.';
-    if (!EMAIL_RE.test(String(regVals.email || '').trim())) e.email = 'Email no válido.';
-    const p1 = String(regVals.password || '');
-    const p2 = String(regVals.password2 || '');
-    if (p1.length < 6 || p1.length > 64) e.password = 'Clave: 6–64.';
-    if (p1 !== p2) e.password2 = 'Las claves no coinciden.';
-    return e;
+
+ const regErrors = useMemo(() => {
+  const e = {};
+  const emailTrimmed = String(regVals.correo || '').trim();
+  const nameTrimmed = String(regVals.name || '').trim();
+
+  if (nameTrimmed.length < 3 || nameTrimmed.length > 60) e.name = 'Nombre: 3–60 caracteres.';
+  if (!EMAIL_RE.test(emailTrimmed)) e.correo = 'Email no válido.';
+
+  const p1 = String(regVals.password || '');
+  const p2 = String(regVals.password2 || '');
+  if (p1.length < 6 || p1.length > 64) e.password = 'Clave: 6–64 caracteres.';
+  if (p1 !== p2) e.password2 = 'Las claves no coinciden.';
+  if (regVals.address.trim().length < 10) e.address = 'La dirección debe tener al menos 10 caracteres.';
+
+  return e;
   }, [regVals]);
+
 
   const touch = (name) => setTouched((t) => ({ ...t, [name]: true }));
 
   // ===== Acciones =====
-  const doLogin = (ev) => {
-    ev.preventDefault();
-    setTouched({ email: true, password: true });
-    if (Object.keys(loginErrors).length) {
-      setStatus({ type: 'error', msg: 'Revisa los campos.' });
-      return;
-    }
-    const r = loginUser(loginVals);
-    if (!r.ok) return setStatus({ type: 'error', msg: r.msg });
-    setStatus({ type: 'ok', msg: 'Bienvenido.' });
-  };
+  const doLogin = async (ev) => {
+  ev.preventDefault();
+  setTouched({ correo: true, password: true });
+
+  if (Object.keys(loginErrors).length) {
+    setStatus({ type: 'error', msg: 'Revisa los campos.' });
+    return;
+  }
+
+  const r = await loginUser(loginVals);
+  if (!r.ok) return setStatus({ type: 'error', msg: r.msg });
+
+  // 🔥 Cargar datos reales del usuario desde backend
+  const datos = await fetchMisDatos();
+  if (datos) setMisDatos(datos);
+
+  setStatus({ type: 'ok', msg: 'Bienvenido.' });
+};
 
   const doRegister = (ev) => {
     ev.preventDefault();
-    setTouched({ name: true, email: true, password: true, password2: true });
+    setTouched({ name: true, correo: true, password: true, password2: true, address: true });
     if (Object.keys(regErrors).length) {
       setStatus({ type: 'error', msg: 'Revisa los campos del registro.' });
       return;
@@ -91,33 +126,42 @@ export default function Perfil() {
     logout();
     setStatus({ type: 'ok', msg: 'Sesión cerrada.' });
   };
-
   // ===== UI =====
   if (user) {
-    return (
-      <section className="section container">
-        <h2>Mi cuenta</h2>
-        <p className="meta">Nombre: <strong>{user.name}</strong></p>
-        <p className="meta">Email: <strong>{user.email}</strong></p>
-        <p className="meta">Puntos cliente: <strong>{user.puntos_clientes || 0}</strong></p>
+  return (
+    <section className="section container">
+      <h2>Mi cuenta</h2>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-          <button className="btn" onClick={doLogout}>Cerrar sesión</button>
+      {/* Datos reales del usuario desde el estado misDatos */}
+      {misDatos ? (
+        <>
+          <p className="meta">Nombre: <strong>{misDatos.name}</strong></p>
+          <p className="meta">Email: <strong>{misDatos.correo}</strong></p>
+          <p className="meta">Dirección: <strong>{misDatos.address}</strong></p>
+          <p className="meta">Puntos cliente: <strong>{misDatos.puntos_clientes}</strong></p>
+        </>
+      ) : (
+        <p>Cargando datos del usuario...</p>
+      )}
+
+      <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+        <button className="btn" onClick={doLogout}>Cerrar sesión</button>
+      </div>
+
+      {status.type ? (
+        <div
+          className={`form-status ${status.type === 'error' ? 'is-error' : 'is-ok'}`}
+          style={{ marginTop: 12 }}
+          role={status.type === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+        >
+          {status.msg}
         </div>
+      ) : null}
+    </section>
+  );
+}
 
-        {status.type ? (
-          <div
-            className={`form-status ${status.type === 'error' ? 'is-error' : 'is-ok'}`}
-            style={{ marginTop: 12 }}
-            role={status.type === 'error' ? 'alert' : 'status'}
-            aria-live="polite"
-          >
-            {status.msg}
-          </div>
-        ) : null}
-      </section>
-    );
-  }
 
   return (
     <section className="section container">
@@ -141,18 +185,18 @@ export default function Perfil() {
 
       {mode === 'login' ? (
         <form className="form" onSubmit={doLogin} noValidate>
-          <div className={`field ${touched.email && loginErrors.email ? 'has-error' : ''}`}>
+          <div className={`field ${touched.correo && loginErrors.correo ? 'has-error' : ''}`}>
             <label htmlFor="login_email">Email</label>
             <input
               id="login_email"
-              value={loginVals.email}
-              onChange={e => setLoginVals(v => ({ ...v, email: e.target.value }))}
-              onBlur={() => touch('email')}
+              value={loginVals.correo}
+              onChange={e => setLoginVals(v => ({ ...v, correo: e.target.value }))}
+              onBlur={() => touch('correo')}
               inputMode="email"
               autoComplete="email"
               required
             />
-            <small className="error">{touched.email && loginErrors.email ? loginErrors.email : ''}</small>
+            <small className="error">{touched.correo && loginErrors.correo ? loginErrors.correo : ''}</small>
           </div>
 
           <div className={`field ${touched.password && loginErrors.password ? 'has-error' : ''}`}>
@@ -189,18 +233,18 @@ export default function Perfil() {
             <small className="error">{touched.name && regErrors.name ? regErrors.name : ''}</small>
           </div>
 
-          <div className={`field ${touched.email && regErrors.email ? 'has-error' : ''}`}>
+          <div className={`field ${touched.correo && regErrors.correo ? 'has-error' : ''}`}>
             <label htmlFor="reg_email">Email</label>
             <input
               id="reg_email"
-              value={regVals.email}
-              onChange={e => setRegVals(v => ({ ...v, email: e.target.value }))}
-              onBlur={() => touch('email')}
+              value={regVals.correo}
+              onChange={e => setRegVals(v => ({ ...v, correo: e.target.value }))}
+              onBlur={() => touch('correo')}
               inputMode="email"
               autoComplete="email"
               required
             />
-            <small className="error">{touched.email && regErrors.email ? regErrors.email : ''}</small>
+            <small className="error">{touched.correo && regErrors.correo ? regErrors.correo : ''}</small>
           </div>
 
           <div className={`field ${touched.password && regErrors.password ? 'has-error' : ''}`}>
@@ -231,6 +275,18 @@ export default function Perfil() {
               required
             />
             <small className="error">{touched.password2 && regErrors.password2 ? regErrors.password2 : ''}</small>
+          </div>
+
+          <div className={`field ${touched.address && regErrors.address ? 'has-error' : ''}`}>
+            <label htmlFor="reg_address">Dirección</label>
+            <input
+              id="reg_address"
+              value={regVals.address}
+              onChange={e => setRegVals(v => ({ ...v, address: e.target.value }))}
+              onBlur={() => touch('address')}
+              required
+            />
+            <small className="error">{touched.address && regErrors.address ? regErrors.address : ''}</small>
           </div>
 
           <div className="actions">

@@ -11,7 +11,8 @@ import {
   loadCart, persistCart, addToCart,
   removeFromCart, setQtyInCart, clearCart
 } from './utils/cart';
-import { getCurrentUser, addPuntos } from './utils/users';
+
+import { getCurrentUser } from './utils/users';
 
 export default function App() {
   const [cart, setCart] = useState(() => loadCart());
@@ -20,16 +21,16 @@ export default function App() {
 
   useEffect(() => { persistCart(cart); }, [cart]);
 
-  // escuchar login/logout para mantener session
+  // Escuchar login
   useEffect(() => {
     const onSess = (e) => setSession(e.detail ?? getCurrentUser());
     window.addEventListener('lv:session', onSess);
     return () => window.removeEventListener('lv:session', onSess);
   }, []);
 
-  // si no está logueado → ir a /perfil con aviso
+  // Si no hay sesión → redirigir al perfil
   const requireLogin = () => {
-    if (session) return true;
+    if (session?.token) return true;  // ⬅ ahora validamos token
     navigate('/perfil?needLogin=1');
     window.dispatchEvent(new CustomEvent('lv:notice', {
       detail: 'Debes estar registrado para comprar en la tienda.',
@@ -37,25 +38,23 @@ export default function App() {
     return false;
   };
 
-  // Añadir al carrito: bloquea si no hay sesión
+  // Añadir al carrito: requiere login
   const handleAdd = (product, qty = 1) => {
     if (!requireLogin()) return;
-    setCart(addToCart(product)); // (tu addToCart no usa qty)
+    setCart(addToCart(product));
   };
+
   const handleRemove = (code)      => setCart(removeFromCart(code));
   const handleSetQty = (code, qty) => setCart(setQtyInCart(code, qty));
   const handleClear  = ()          => setCart(clearCart());
 
-  // Checkout: App recibe los puntos calculados por Cart
-  const handleCheckout = ({ points_awarded }) => {
+  // Checkout
+  const handleCheckout = () => {
     if (!requireLogin()) return { ok:false, reason:'auth' };
-    try {
-      addPuntos(session.email, points_awarded || 0);
-      setCart(clearCart());
-      return { ok:true };
-    } catch {
-      return { ok:false, reason:'points' };
-    }
+
+    // por ahora no tenemos puntos desde backend
+    setCart(clearCart());
+    return { ok:true };
   };
 
   return (
