@@ -107,20 +107,47 @@ export default function Perfil() {
     if (datos) setMisDatos(datos);
   };
 
-  const doRegister = (ev) => {
-    ev.preventDefault();
-    setTouched({ name: true, correo: true, password: true, password2: true, address: true });
+  const doRegister = async (ev) => {
+  ev.preventDefault();
+  setTouched({
+    name: true,
+    correo: true,
+    password: true,
+    password2: true,
+    address: true,
+  });
 
-    if (Object.keys(regErrors).length) {
-      setStatus({ type: 'error', msg: 'Revisa los campos del registro.' });
-      return;
-    }
+  if (Object.keys(regErrors).length) {
+    setStatus({ type: 'error', msg: 'Revisa los campos del registro.' });
+    return;
+  }
 
-    const r = registerUser(regVals);
-    if (!r.ok) return setStatus({ type: 'error', msg: r.msg });
-    setStatus({ type: 'ok', msg: 'Cuenta creada.' });
-    setMode('login');
-  };
+  const r = await registerUser({
+    name: regVals.name,
+    correo: regVals.correo,
+    password: regVals.password,
+    address: regVals.address,
+  });
+
+  if (!r.ok) {
+    setStatus({ type: 'error', msg: r.msg });
+    return;
+  }
+
+  setStatus({ type: 'ok', msg: 'Cuenta creada y sesión iniciada.' });
+
+  const session = getCurrentUser();
+  const isAdmin = session?.role === 'ADMIN' || session?.role_id === 2;
+
+  if (isAdmin) {
+    navigate('/admin', { replace: true });
+    return;
+  }
+
+  const datos = await fetchMisDatos();
+  if (datos) setMisDatos(datos);
+};
+
 
   const doLogout = () => {
     logout();
