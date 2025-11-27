@@ -3,6 +3,24 @@ const API = "https://api.sebaorekind.site/auth";
 
 const KEY_SESSION = "lv_user_session";
 
+// =============== Helpers JWT ===============
+function decodeJwtPayload(token) {
+  try {
+    if (!token) return null;
+    const parts = String(token).split(".");
+    if (parts.length < 2) return null;
+
+    // JWT usa base64url → normalizamos
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64 + "===".slice((base64.length + 3) % 4);
+
+    const jsonStr = atob(padded);
+    return JSON.parse(jsonStr);
+  } catch (err) {
+    return null;
+  }
+}
+
 // =============== Sesión ===============
 export function getCurrentUser() {
   try {
@@ -15,43 +33,31 @@ export function getCurrentUser() {
 
 export function setCurrentUser(user) {
   try {
-    if (user) localStorage.setItem(KEY_SESSION, JSON.stringify(user));
-    else localStorage.removeItem(KEY_SESSION);
-  } catch {}
-
-  try {
-    window.dispatchEvent(new CustomEvent("lv:session", { detail: getCurrentUser() }));
-  } catch {}
-}
-
-export function logout() {
-  setCurrentUser(null);
-}
-
-// =============== Registro (BACKEND) ===============
-export async function registerUser({ name, correo, password, address }) {
-  try {
-    const body = { name, correo, password, address };
-
-    const res = await fetch(`${API}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { ok: false, msg: data.message || "Error al registrar" };
-    }
-
-    return { ok: true, msg: "Usuario registrado correctamente" };
-  } catch (err) {
-    return { ok: false, msg: "No se pudo conectar con el servidor" };
+    localStorage.setItem(KEY_SESSION, JSON.stringify(user));
+  } catch {
+    // nada
   }
 }
 
-// =============== Login (BACKEND) ===============
+export function logout() {
+  try {
+    localStorage.removeItem(KEY_SESSION);
+  } catch {
+    // nada
+  }
+}
+
+// =============== Registro (mock simple) ===============
+// Cuando tengas endpoint real, acá se enchufa.
+export function registerUser({ name, correo, password, address }) {
+  if (!name || !correo || !password || !address) {
+    return { ok: false, msg: "Faltan datos para el registro." };
+  }
+
+  return { ok: true };
+}
+
+// =============== Login (usa backend real) ===============
 export async function loginUser({ correo, password }) {
   try {
     const res = await fetch(`${API}/login`, {
@@ -60,15 +66,29 @@ export async function loginUser({ correo, password }) {
       body: JSON.stringify({ correo, password }),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
 
-    if (!data.token) {
+    if (!res.ok || !data.token) {
       return { ok: false, msg: "Correo o contraseña incorrectos" };
     }
 
+    const payload = decodeJwtPayload(data.token);
+
+    const roleFromApi = data.role || payload?.role || null;
+    const roleId =
+      roleFromApi === "ADMIN"
+        ? 2
+        : roleFromApi === "USER"
+        ? 1
+        : null;
+
     const usuario = {
-      correo,
+      correo: data.correo || correo,
       token: data.token,
+      name: data.name || null,
+      address: data.address || null,
+      role: roleFromApi,  // "USER" | "ADMIN"
+      role_id: roleId,    // 1 | 2
     };
 
     setCurrentUser(usuario);
