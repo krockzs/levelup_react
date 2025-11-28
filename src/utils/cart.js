@@ -1,5 +1,6 @@
-const KEY = 'lu_cart';
 import React from 'react'; 
+
+const KEY = 'lu_cart';
 
 export function getCart() {
   try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }

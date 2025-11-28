@@ -39,128 +39,191 @@ export function setCurrentUser(user) {
 }
 
 export function logout() {
+  // 1) Borrar del storage
   try {
     localStorage.removeItem(KEY_SESSION);
   } catch {
     // nada
   }
+
+  // 2) Notificar a toda la app que ya NO hay sesión
+  try {
+    window.dispatchEvent(
+      new CustomEvent('lv:session', { detail: null })
+    );
+  } catch {
+    // nada
+  }
 }
 
-// =============== Registro (usa backend real) ===============
+
+// =============== Registro (BACKEND) ===============
 export async function registerUser({ name, correo, password, address }) {
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-  const nameTrimmed = String(name || "").trim();
-  const emailTrimmed = String(correo || "").trim();
-  const addrTrimmed = String(address || "").trim();
-  const passStr = String(password || "");
+  const nameTrimmed  = String(name || '').trim();
+  const emailTrimmed = String(correo || '').trim();
+  const addrTrimmed  = String(address || '').trim();
+  const passStr      = String(password || '');
 
   // Validaciones básicas
   if (nameTrimmed.length < 4 || nameTrimmed.length > 60) {
-    return { ok: false, msg: "Nombre: 4–60 caracteres." };
+    return { ok: false, msg: 'Nombre: 4–60 caracteres.' };
   }
 
   if (!EMAIL_RE.test(emailTrimmed)) {
-    return { ok: false, msg: "Email no válido." };
+    return { ok: false, msg: 'Email no válido.' };
   }
 
   if (passStr.length < 6 || passStr.length > 64) {
-    return { ok: false, msg: "Clave: 6–64 caracteres." };
+    return { ok: false, msg: 'Clave: 6–64 caracteres.' };
   }
 
   if (addrTrimmed.length < 10) {
-    return {
-      ok: false,
-      msg: "La dirección debe tener al menos 10 caracteres.",
-    };
+    return { ok: false, msg: 'La dirección debe tener al menos 10 caracteres.' };
   }
 
   try {
+    const body = {
+      name   : nameTrimmed,
+      correo : emailTrimmed,
+      password: passStr,
+      address: addrTrimmed,
+    };
+
     const res = await fetch(`${API}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: nameTrimmed,
-        correo: emailTrimmed,
-        password: passStr,
-        address: addrTrimmed,
-      }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok || !data.token) {
-      return {
-        ok: false,
-        msg: data.error || data.message || "No se pudo registrar el usuario.",
-      };
+    if (!res.ok) {
+      // puedes ajustar según lo que devuelva tu API
+      return { ok: false, msg: 'No se pudo registrar el usuario.' };
     }
 
-    const payload = decodeJwtPayload(data.token);
+    const data = await res.json();
 
-    const roleFromApi = data.role || payload?.role || null;
-    const roleId =
-      roleFromApi === "ADMIN"
-        ? 2
-        : roleFromApi === "USER"
-        ? 1
-        : null;
+    if (!data?.token) {
+      return { ok: false, msg: 'No se recibió token desde el servidor.' };
+    }
 
     const usuario = {
-      correo: data.correo || emailTrimmed,
-      token: data.token,
-      name: data.name || nameTrimmed,
-      address: data.address || addrTrimmed,
-      role: roleFromApi, // "USER" | "ADMIN"
-      role_id: roleId, // 1 | 2
+      correo  : data.correo  || emailTrimmed,
+      name    : data.name    || nameTrimmed,
+      role    : data.role    || data.rol || null,
+      role_id : data.role_id ?? data.rol_id ?? null,
+      address : data.address || addrTrimmed,
+      token   : data.token,
     };
 
     setCurrentUser(usuario);
+    // notificar al front (App.jsx escucha este evento)
+    window.dispatchEvent(new CustomEvent('lv:session', { detail: usuario }));
 
     return { ok: true };
   } catch (err) {
-    return { ok: false, msg: "No se pudo conectar con el servidor." };
+    return { ok: false, msg: 'No se pudo conectar con el servidor.' };
   }
 }
 
-// =============== Login (usa backend real) ===============
+
 export async function loginUser({ correo, password }) {
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  const emailTrimmed = String(correo || '').trim();
+  const passStr      = String(password || '');
+
+  if (!EMAIL_RE.test(emailTrimmed)) {
+    return { ok: false, msg: 'Email no válido.' };
+  }
+
+  if (passStr.length < 6 || passStr.length > 64) {
+    return { ok: false, msg: 'Clave: 6–64 caracteres.' };
+  }
+
   try {
+    const body = { correo: emailTrimmed, password: passStr };
+
     const res = await fetch(`${API}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ correo, password }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok || !data.token) {
-      return { ok: false, msg: "Correo o contraseña incorrectos" };
+    if (!res.ok) {
+      return { ok: false, msg: 'Correo o contraseña incorrectos' };
     }
 
-    const payload = decodeJwtPayload(data.token);
+    const data = await res.json();
 
-    const roleFromApi = data.role || payload?.role || null;
-    const roleId =
-      roleFromApi === "ADMIN"
-        ? 2
-        : roleFromApi === "USER"
-        ? 1
-        : null;
+    if (!data?.token) {
+      return { ok: false, msg: 'No se recibió token desde el servidor.' };
+    }
 
     const usuario = {
-      correo: data.correo || correo,
-      token: data.token,
-      name: data.name || null,
-      address: data.address || null,
-      role: roleFromApi, // "USER" | "ADMIN"
-      role_id: roleId, // 1 | 2
+      correo  : data.correo  || emailTrimmed,
+      name    : data.name    || data.nombre || '',
+      role    : data.role    || data.rol || null,
+      role_id : data.role_id ?? data.rol_id ?? null,
+      address : data.address || '',
+      token   : data.token,
     };
 
     setCurrentUser(usuario);
+    window.dispatchEvent(new CustomEvent('lv:session', { detail: usuario }));
 
     return { ok: true };
   } catch (err) {
-    return { ok: false, msg: "No se pudo conectar con el servidor" };
+    return { ok: false, msg: 'No se pudo conectar con el servidor' };
   }
 }
+
+// Sumar puntos al cliente usando el token JWT actual
+export async function awardPoints(points) {
+  const session = getCurrentUser();
+  const token = session?.token;
+
+  const pts = Number(points || 0);
+
+  // Sin sesión → error de auth
+  if (!token) {
+    return { ok: false, msg: 'No hay sesión activa.' };
+  }
+
+  // Si no hay puntos que sumar, lo consideramos OK y no pegamos al backend
+  if (pts <= 0) {
+    return { ok: true };
+  }
+
+  try {
+    const res = await fetch(`${API}/puntos`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        // ACÁ va el token que el backend está pidiendo
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ puntos: pts }),
+    });
+
+    if (!res.ok) {
+      let msg = 'No se pudieron asignar los puntos.';
+      try {
+        const data = await res.json();
+        if (data?.error) msg = data.error;
+      } catch {
+        // da lo mismo
+      }
+      return { ok: false, msg };
+    }
+
+    const data = await res.json();
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, msg: 'Error de red al asignar puntos.' };
+  }
+}
+
+
+

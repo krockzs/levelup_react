@@ -34,6 +34,7 @@ export default function Perfil() {
 
   const user = getCurrentUser();
 
+  // Mensajes que vienen por query (?needLogin=1)
   useEffect(() => {
     const q = new URLSearchParams(location.search);
     if (q.get('needLogin') === '1') {
@@ -41,15 +42,34 @@ export default function Perfil() {
     }
   }, [location.search]);
 
+  // Mensajes que vienen por evento global lv:notice
   useEffect(() => {
     const onNotice = (e) => setStatus({ type: 'error', msg: e.detail || '' });
     window.addEventListener('lv:notice', onNotice);
     return () => window.removeEventListener('lv:notice', onNotice);
   }, []);
 
+  // Auto-ocultar mensajes después de unos segundos
+  useEffect(() => {
+    if (!status.type) return;
+    const id = setTimeout(() => {
+      setStatus({ type: null, msg: '' });
+    }, 4000);
+    return () => clearTimeout(id);
+  }, [status.type, status.msg]);
+
   const [loginVals, setLoginVals] = useState({ correo: '', password: '' });
-  const [regVals, setRegVals] = useState({ name: '', correo: '', password: '', password2: '', address: '' });
-  const [touched, setTouched] = useState({});
+  const [regVals, setRegVals] = useState({
+    name: '',
+    correo: '',
+    password: '',
+    password2: '',
+    address: '',
+  });
+
+  // touched separado para login y registro
+  const [touchedLogin, setTouchedLogin] = useState({});
+  const [touchedReg, setTouchedReg] = useState({});
 
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -78,11 +98,15 @@ export default function Perfil() {
     return e;
   }, [regVals]);
 
-  const touch = (name) => setTouched((t) => ({ ...t, [name]: true }));
+  const touchLogin = (name) =>
+    setTouchedLogin((t) => ({ ...t, [name]: true }));
+
+  const touchReg = (name) =>
+    setTouchedReg((t) => ({ ...t, [name]: true }));
 
   const doLogin = async (ev) => {
     ev.preventDefault();
-    setTouched({ correo: true, password: true });
+    setTouchedLogin({ correo: true, password: true });
 
     if (Object.keys(loginErrors).length) {
       setStatus({ type: 'error', msg: 'Revisa los campos.' });
@@ -108,50 +132,61 @@ export default function Perfil() {
   };
 
   const doRegister = async (ev) => {
-  ev.preventDefault();
-  setTouched({
-    name: true,
-    correo: true,
-    password: true,
-    password2: true,
-    address: true,
-  });
+    ev.preventDefault();
+    setTouchedReg({
+      name: true,
+      correo: true,
+      password: true,
+      password2: true,
+      address: true,
+    });
 
-  if (Object.keys(regErrors).length) {
-    setStatus({ type: 'error', msg: 'Revisa los campos del registro.' });
-    return;
-  }
+    if (Object.keys(regErrors).length) {
+      setStatus({ type: 'error', msg: 'Revisa los campos del registro.' });
+      return;
+    }
 
-  const r = await registerUser({
-    name: regVals.name,
-    correo: regVals.correo,
-    password: regVals.password,
-    address: regVals.address,
-  });
+    const r = await registerUser({
+      name: regVals.name,
+      correo: regVals.correo,
+      password: regVals.password,
+      address: regVals.address,
+    });
 
-  if (!r.ok) {
-    setStatus({ type: 'error', msg: r.msg });
-    return;
-  }
+    if (!r.ok) {
+      setStatus({ type: 'error', msg: r.msg });
+      return;
+    }
 
-  setStatus({ type: 'ok', msg: 'Cuenta creada y sesión iniciada.' });
+    setStatus({ type: 'ok', msg: 'Cuenta creada y sesión iniciada.' });
 
-  const session = getCurrentUser();
-  const isAdmin = session?.role === 'ADMIN' || session?.role_id === 2;
+    const session = getCurrentUser();
+    const isAdmin = session?.role === 'ADMIN' || session?.role_id === 2;
 
-  if (isAdmin) {
-    navigate('/admin', { replace: true });
-    return;
-  }
+    if (isAdmin) {
+      navigate('/admin', { replace: true });
+      return;
+    }
 
-  const datos = await fetchMisDatos();
-  if (datos) setMisDatos(datos);
-};
-
+    const datos = await fetchMisDatos();
+    if (datos) setMisDatos(datos);
+  };
 
   const doLogout = () => {
     logout();
     setStatus({ type: 'ok', msg: 'Sesión cerrada.' });
+  };
+
+  const switchToLogin = () => {
+    setMode('login');
+    setStatus({ type: null, msg: '' });
+    setTouchedLogin({});
+  };
+
+  const switchToRegister = () => {
+    setMode('register');
+    setStatus({ type: null, msg: '' });
+    setTouchedReg({});
   };
 
   if (user) {
@@ -191,7 +226,10 @@ export default function Perfil() {
           </button>
 
           {status.type && (
-            <div className={`form-status ${status.type === 'error' ? 'is-error' : 'is-ok'}`} style={{ marginTop: 12 }}>
+            <div
+              className={`form-status ${status.type === 'error' ? 'is-error' : 'is-ok'}`}
+              style={{ marginTop: 12 }}
+            >
               {status.msg}
             </div>
           )}
@@ -205,68 +243,57 @@ export default function Perfil() {
       <div className="auth-full-card">
         <div className="auth-full-left">
           <h2 className="auth-full-title">
-            {mode === "login" ? "Iniciar Sesión" : "Crear Cuenta"}
+            {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h2>
 
           <div className="auth-switch">
             <button
               className={`btn${mode === 'login' ? ' primary' : ''}`}
-              onClick={() => setMode('login')}
+              onClick={switchToLogin}
             >
               Iniciar sesión
             </button>
 
             <button
               className={`btn${mode === 'register' ? ' primary' : ''}`}
-              onClick={() => setMode('register')}
+              onClick={switchToRegister}
             >
               Crear cuenta
             </button>
           </div>
 
-          {status.type && (
-            <div
-              className={`form-status ${status.type === 'error' ? 'is-error' : 'is-ok'}`}
-              role={status.type === 'error' ? 'alert' : 'status'}
-              aria-live="polite"
-            >
-              {status.msg}
-            </div>
-          )}
-
           <div className="auth-fields">
             {mode === 'login' ? (
               <form className="form" onSubmit={doLogin} noValidate>
-
-                <div className={`field ${touched.correo && loginErrors.correo ? 'has-error' : ''}`}>
+                <div className={`field ${touchedLogin.correo && loginErrors.correo ? 'has-error' : ''}`}>
                   <label htmlFor="login_email">Email</label>
                   <input
                     id="login_email"
                     value={loginVals.correo}
                     onChange={e => setLoginVals(v => ({ ...v, correo: e.target.value }))}
-                    onBlur={() => touch('correo')}
+                    onBlur={() => touchLogin('correo')}
                     inputMode="email"
                     autoComplete="email"
                     required
                   />
                   <small className="error">
-                    {touched.correo && loginErrors.correo ? loginErrors.correo : ''}
+                    {touchedLogin.correo && loginErrors.correo ? loginErrors.correo : ''}
                   </small>
                 </div>
 
-                <div className={`field ${touched.password && loginErrors.password ? 'has-error' : ''}`}>
+                <div className={`field ${touchedLogin.password && loginErrors.password ? 'has-error' : ''}`}>
                   <label htmlFor="login_password">Clave</label>
                   <input
                     id="login_password"
                     type="password"
                     value={loginVals.password}
                     onChange={e => setLoginVals(v => ({ ...v, password: e.target.value }))}
-                    onBlur={() => touch('password')}
+                    onBlur={() => touchLogin('password')}
                     autoComplete="current-password"
                     required
                   />
                   <small className="error">
-                    {touched.password && loginErrors.password ? loginErrors.password : ''}
+                    {touchedLogin.password && loginErrors.password ? loginErrors.password : ''}
                   </small>
                 </div>
 
@@ -274,88 +301,96 @@ export default function Perfil() {
                   Entrar
                 </button>
 
+                {status.type && (
+                  <div
+                    className={`form-status ${status.type === 'error' ? 'is-error' : 'is-ok'}`}
+                    style={{ marginTop: 12 }}
+                    role={status.type === 'error' ? 'alert' : 'status'}
+                    aria-live="polite"
+                  >
+                    {status.msg}
+                  </div>
+                )}
               </form>
             ) : (
-
               <form className="form" onSubmit={doRegister} noValidate>
-
-                <div className={`field ${touched.name && regErrors.name ? 'has-error' : ''}`}>
+                <div className={`field ${touchedReg.name && regErrors.name ? 'has-error' : ''}`}>
                   <label htmlFor="reg_name">Nombre</label>
                   <input
                     id="reg_name"
                     value={regVals.name}
                     onChange={e => setRegVals(v => ({ ...v, name: e.target.value }))}
-                    onBlur={() => touch('name')}
+                    onBlur={() => touchReg('name')}
                     minLength={3}
                     maxLength={60}
                     required
                   />
                   <small className="error">
-                    {touched.name && regErrors.name ? regErrors.name : ''}
+                    {touchedReg.name && regErrors.name ? regErrors.name : ''}
                   </small>
                 </div>
 
-                <div className={`field ${touched.correo && regErrors.correo ? 'has-error' : ''}`}>
+                <div className={`field ${touchedReg.correo && regErrors.correo ? 'has-error' : ''}`}>
                   <label htmlFor="reg_email">Email</label>
                   <input
                     id="reg_email"
                     value={regVals.correo}
                     onChange={e => setRegVals(v => ({ ...v, correo: e.target.value }))}
-                    onBlur={() => touch('correo')}
+                    onBlur={() => touchReg('correo')}
                     inputMode="email"
                     autoComplete="email"
                     required
                   />
                   <small className="error">
-                    {touched.correo && regErrors.correo ? regErrors.correo : ''}
+                    {touchedReg.correo && regErrors.correo ? regErrors.correo : ''}
                   </small>
                 </div>
 
-                <div className={`field ${touched.password && regErrors.password ? 'has-error' : ''}`}>
+                <div className={`field ${touchedReg.password && regErrors.password ? 'has-error' : ''}`}>
                   <label htmlFor="reg_password">Clave</label>
                   <input
                     id="reg_password"
                     type="password"
                     value={regVals.password}
                     onChange={e => setRegVals(v => ({ ...v, password: e.target.value }))}
-                    onBlur={() => touch('password')}
+                    onBlur={() => touchReg('password')}
                     autoComplete="new-password"
                     minLength={6}
                     maxLength={64}
                     required
                   />
                   <small className="error">
-                    {touched.password && regErrors.password ? regErrors.password : ''}
+                    {touchedReg.password && regErrors.password ? regErrors.password : ''}
                   </small>
                 </div>
 
-                <div className={`field ${touched.password2 && regErrors.password2 ? 'has-error' : ''}`}>
+                <div className={`field ${touchedReg.password2 && regErrors.password2 ? 'has-error' : ''}`}>
                   <label htmlFor="reg_password2">Repite la clave</label>
                   <input
                     id="reg_password2"
                     type="password"
                     value={regVals.password2}
                     onChange={e => setRegVals(v => ({ ...v, password2: e.target.value }))}
-                    onBlur={() => touch('password2')}
+                    onBlur={() => touchReg('password2')}
                     autoComplete="new-password"
                     required
                   />
                   <small className="error">
-                    {touched.password2 && regErrors.password2 ? regErrors.password2 : ''}
+                    {touchedReg.password2 && regErrors.password2 ? regErrors.password2 : ''}
                   </small>
                 </div>
 
-                <div className={`field ${touched.address && regErrors.address ? 'has-error' : ''}`}>
+                <div className={`field ${touchedReg.address && regErrors.address ? 'has-error' : ''}`}>
                   <label htmlFor="reg_access">Dirección</label>
                   <input
                     id="reg_access"
                     value={regVals.address}
                     onChange={e => setRegVals(v => ({ ...v, address: e.target.value }))}
-                    onBlur={() => touch('address')}
+                    onBlur={() => touchReg('address')}
                     required
                   />
                   <small className="error">
-                    {touched.address && regErrors.address ? regErrors.address : ''}
+                    {touchedReg.address && regErrors.address ? regErrors.address : ''}
                   </small>
                 </div>
 
@@ -363,6 +398,16 @@ export default function Perfil() {
                   Crear cuenta
                 </button>
 
+                {status.type && (
+                  <div
+                    className={`form-status ${status.type === 'error' ? 'is-error' : 'is-ok'}`}
+                    style={{ marginTop: 12 }}
+                    role={status.type === 'error' ? 'alert' : 'status'}
+                    aria-live="polite"
+                  >
+                    {status.msg}
+                  </div>
+                )}
               </form>
             )}
           </div>

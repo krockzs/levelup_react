@@ -7,6 +7,7 @@ import ProductDetail from './components/pages/ProductDetail';
 import Perfil from './components/pages/Perfil';
 import Admin from './components/pages/Admin';
 import Navbar from './components/organisms/Navbar';
+import { getCurrentUser, awardPoints } from './utils/users';
 
 import {
   loadCart,
@@ -17,7 +18,6 @@ import {
   clearCart,
 } from './utils/cart';
 
-import { getCurrentUser } from './utils/users';
 
 export default function App() {
   const [cart, setCart] = useState(() => loadCart());
@@ -70,15 +70,22 @@ export default function App() {
     setCart(clearCart());
   };
 
-  // Checkout (después le enchufamos llamada real al backend si quieres)
-  const handleCheckout = ({ points_awarded } = {}) => {
+  const handleCheckout = async ({ points_awarded } = {}) => {
     if (!requireLogin()) {
       return { ok: false, reason: 'auth' };
     }
-    // Por ahora solo limpiamos el carrito y devolvemos ok
+
+    const pts = Number(points_awarded || 0);
+
+    const res = await awardPoints(pts);
+    if (!res.ok) {
+      return { ok: false, reason: 'points', msg: res.msg };
+    }
+
     setCart(clearCart());
     return { ok: true };
   };
+
 
   return (
     <>
