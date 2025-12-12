@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1764006857003" clover="3.2.0">
-  <project timestamp="1764006857004" name="All files">
-    <metrics statements="148" coveredstatements="81" conditionals="112" coveredconditionals="44" methods="69" coveredmethods="32" elements="329" coveredelements="157" complexity="0" loc="148" ncloc="148" packages="4" files="7" classes="7"/>
+<coverage generated="1765562967228" clover="3.2.0">
+  <project timestamp="1765562967228" name="All files">
+    <metrics statements="151" coveredstatements="81" conditionals="116" coveredconditionals="44" methods="69" coveredmethods="32" elements="336" coveredelements="157" complexity="0" loc="151" ncloc="151" packages="4" files="7" classes="7"/>
     <package name="components.atoms">
       <metrics statements="4" coveredstatements="4" conditionals="4" coveredconditionals="3" methods="2" coveredmethods="2"/>
       <file name="Button.jsx" path="C:\Users\SebaOre\Desktop\Trabajos\levelup_react\src\components\atoms\Button.jsx">
@@ -23,32 +23,35 @@
       </file>
     </package>
     <package name="components.pages">
-      <metrics statements="121" coveredstatements="74" conditionals="86" coveredconditionals="39" methods="51" coveredmethods="27"/>
+      <metrics statements="124" coveredstatements="74" conditionals="90" coveredconditionals="39" methods="51" coveredmethods="27"/>
       <file name="Cart.jsx" path="C:\Users\SebaOre\Desktop\Trabajos\levelup_react\src\components\pages\Cart.jsx">
-        <metrics statements="23" coveredstatements="11" conditionals="21" coveredconditionals="6" methods="11" coveredmethods="5"/>
-        <line num="10" count="4" type="cond" truecount="0" falsecount="1"/>
-        <line num="13" count="2" type="stmt"/>
-        <line num="16" count="2" type="stmt"/>
-        <line num="17" count="2" type="stmt"/>
-        <line num="18" count="4" type="cond" truecount="1" falsecount="1"/>
-        <line num="19" count="4" type="cond" truecount="1" falsecount="1"/>
-        <line num="20" count="4" type="stmt"/>
+        <metrics statements="26" coveredstatements="11" conditionals="25" coveredconditionals="6" methods="11" coveredmethods="5"/>
+        <line num="9" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="12" count="2" type="stmt"/>
+        <line num="14" count="2" type="stmt"/>
+        <line num="15" count="2" type="stmt"/>
+        <line num="16" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="17" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="18" count="4" type="stmt"/>
+        <line num="22" count="2" type="stmt"/>
         <line num="24" count="2" type="stmt"/>
-        <line num="26" count="2" type="stmt"/>
-        <line num="27" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="25" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="26" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="28" count="0" type="stmt"/>
-        <line num="29" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="30" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="31" count="0" type="stmt"/>
-        <line num="32" count="0" type="stmt"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="32" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="33" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="34" count="0" type="stmt"/>
-        <line num="40" count="2" type="stmt"/>
-        <line num="56" count="4" type="stmt"/>
-        <line num="66" count="0" type="stmt"/>
-        <line num="72" count="0" type="stmt"/>
-        <line num="96" count="0" type="stmt"/>
-        <line num="103" count="0" type="stmt"/>
-        <line num="113" count="0" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="51" count="0" type="stmt"/>
+        <line num="58" count="2" type="stmt"/>
+        <line num="79" count="4" type="stmt"/>
+        <line num="93" count="0" type="stmt"/>
+        <line num="101" count="0" type="stmt"/>
+        <line num="131" count="0" type="stmt"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="164" count="0" type="stmt"/>
       </file>
       <file name="Home.jsx" path="C:\Users\SebaOre\Desktop\Trabajos\levelup_react\src\components\pages\Home.jsx">
         <metrics statements="25" coveredstatements="19" conditionals="8" coveredconditionals="8" methods="12" coveredmethods="7"/>
@@ -159,28 +162,28 @@
       <metrics statements="22" coveredstatements="2" conditionals="22" coveredconditionals="2" methods="15" coveredmethods="2"/>
       <file name="cart.js" path="C:\Users\SebaOre\Desktop\Trabajos\levelup_react\src\utils\cart.js">
         <metrics statements="22" coveredstatements="2" conditionals="22" coveredconditionals="2" methods="15" coveredmethods="2"/>
-        <line num="1" count="1" type="stmt"/>
-        <line num="5" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="6" count="0" type="stmt"/>
-        <line num="10" count="0" type="stmt"/>
-        <line num="14" count="0" type="stmt"/>
-        <line num="17" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="21" count="0" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="6" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="11" count="0" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="22" count="0" type="stmt"/>
-        <line num="23" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="24" count="0" type="stmt"/>
-        <line num="31" count="0" type="stmt"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="24" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="25" count="0" type="stmt"/>
         <line num="32" count="0" type="stmt"/>
-        <line num="36" count="0" type="stmt"/>
+        <line num="33" count="0" type="stmt"/>
         <line num="37" count="0" type="stmt"/>
         <line num="38" count="0" type="stmt"/>
-        <line num="42" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="39" count="0" type="stmt"/>
         <line num="43" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="44" count="0" type="stmt"/>
+        <line num="44" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="45" count="0" type="stmt"/>
-        <line num="48" count="0" type="stmt"/>
-        <line num="51" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="55" count="4" type="cond" truecount="2" falsecount="2"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="49" count="0" type="stmt"/>
+        <line num="52" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="56" count="4" type="cond" truecount="2" falsecount="2"/>
       </file>
     </package>
   </project>
